@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluemsun.know.mapper.CommentMapper">
+
+    <insert id="addFirstComment" parameterType="firstComment">
+        insert into entity_first_comment (user_id,post_id,text,time) values (#{userId},#{postId},#{text},now())
+    </insert>
+
+    <select id="getFirstCommentByPost" parameterType="int" resultType="firstComment">
+        select * from entity_first_comment where post_id = #{postId} order by id desc
+    </select>
+
+    <select id="getFirstHotCommentByPost" parameterType="int" resultType="firstComment">
+        select * from entity_first_comment where post_id = #{postId} order by like_number desc
+    </select>
+    
+    <delete id="delFirstComment" parameterType="int">
+        delete from entity_first_comment where id = #{commentId}
+    </delete>
+
+
+    <select id="getFirstCommentNum" parameterType="int" resultType="int">
+        select count(*) from entity_first_comment where post_id = #{postId}
+    </select>
+
+    <select id="getCommentById" resultType="firstComment">
+        select * from entity_first_comment where id = #{commentId}
+    </select>
+
+    <insert id="addSecondComment" parameterType="secondComment">
+        insert into entity_second_comment (first_id, reply_user_id, replied_user_id, text, time) values (#{firstId}, #{replyUserId}, #{repliedUserId},#{text}, now())
+    </insert>
+
+    <select id="getSecondCommentByFirstId" parameterType="int" resultType="secondComment">
+        select * from entity_second_comment where first_id = #{firstId}
+    </select>
+
+    <delete id="delSecondComment" parameterType="int">
+        delete from entity_second_comment where id = #{id}
+    </delete>
+
+    <select id="getSecondCommentById" parameterType="int" resultType="secondComment">
+        select * from entity_second_comment where id = #{id}
+    </select>
+
+    <update id="delFirstLike" parameterType="int">
+        update entity_first_comment set like_number = like_number - 1 where id = #{id}
+    </update>
+
+    <update id="addFirstLike" parameterType="int">
+        update entity_first_comment set like_number = like_number + 1 where id = #{id}
+    </update>
+
+    <update id="addSecondLike" parameterType="int">
+        update entity_second_comment set like_number = like_number + 1 where id = #{id}
+    </update>
+
+    <update id="delSecondLike" parameterType="int">
+        update entity_second_comment set like_number = like_number - 1 where id = #{id}
+    </update>
+
+</mapper>

@@ -1,0 +1,48 @@
+server:
+  port: 8081
+spring:
+  servlet:
+    multipart:
+      enabled: true #是否启用http上传处理
+      max-file-size: 10MB #设置单个文件最大长度
+      max-request-size: 100MB #最大请求文件的大小
+  datasource: #这是MySQL所使用的配置
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://localhost:3306/know?characterEncoding=utf8&serverTimezone=GMT&characterEncoding=utf8&serverTimezone=UTC&useSSL=false&useServerPrepStmts=true&rewriteBatchedStatements=true
+    username: root
+    password: root
+  mail:
+    username: zhaoxy404@foxmail.com
+    host: smtp.qq.com
+    password: kstqmtgeyjoebfbc
+    properties:
+       mail:
+         smtp:
+           ssl:
+             enable: true
+    default-encoding: UTF-8
+
+
+
+#这是mybatis所使用的配置
+mybatis:
+  type-aliases-package: com.bluemsun.know.entity
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+  #使用mybatis有两个重要的配置：1:mapper-locations:告诉mybatisSQL的映射文件在这里
+  #2:type-aliases-package:告诉mybatis对应的实体类位置
+
+
+file:
+  upload:
+    url: D:/KNOW1/src/main/resources/photo
+  show:
+    url: http://zhaoxy.natapp1.cc/show
+  path: /show/**
+
+
+
+

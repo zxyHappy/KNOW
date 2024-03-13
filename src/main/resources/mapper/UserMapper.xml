@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluemsun.know.mapper.UserMapper">
+    <insert id="insertUser" parameterType="com.bluemsun.know.entity.User">
+        insert into entity_user (user_name, nick_name, password, email) values (#{userName}, #{nickName}, #{password}, #{email})
+    </insert>
+    <!-- property对 应实体类的属性名称，column为数据库字段名
+  <resultMap id="sso" type="com.duing.securityssoserver.entity.MyUsername">
+      <id column="" property=""/>
+      <result column="" property=""/>
+  </resultMap>-->
+
+    <select id="getAllUser" resultType="com.bluemsun.know.entity.User">
+        select * from entity_user where id != 25
+    </select>
+
+    <select id="getUserByUserName" parameterType="String" resultType="com.bluemsun.know.entity.User">
+        select * from entity_user where user_name = #{userName}
+    </select>
+    
+    <select id="getUserByEmail" parameterType="String" resultType="com.bluemsun.know.entity.User">
+        select * from entity_user where email = #{email}
+    </select>
+
+    <select id="getUserById" parameterType="int" resultType="com.bluemsun.know.entity.User">
+        select * from entity_user where id = #{id}
+    </select>
+
+    <update id="updateUser" parameterType="user">
+        update entity_user
+        <set>
+            <if test='nickName != null and nickName != ""'>
+                nick_name = #{nickName},
+            </if>
+            <if test='password != null and password != ""'>
+                password = #{password},
+            </if>
+            <if test='email != null and email != ""'>
+                email = #{email},
+            </if>
+            <if test='photo != null and photo != ""'>
+                photo = #{photo},
+            </if>
+            <if test='selfIntroduce != null and selfIntroduce != ""'>
+                self_introduce = #{selfIntroduce},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <insert id="addFollow">
+        insert into relation_follow (followed_user_id, user_id) values (#{followedUserId}, #{userId})
+    </insert>
+
+    <delete id="deleteFollow">
+        delete from relation_follow where followed_user_id = #{followedUserId} and user_id = #{userId}
+    </delete>
+
+    <select id="getFollowStatus" resultType="user">
+        select * from relation_follow where followed_user_id = #{followedUserId} and user_id = #{userId}
+    </select>
+
+    <select id="getFans" resultType="user">
+        SELECT *
+        FROM entity_user
+        WHERE id IN (SELECT user_id FROM relation_follow WHERE followed_user_id = #{userId})
+          AND id NOT IN (SELECT ignored_user_id FROM relation_black WHERE user_id = #{userId})
+        ORDER BY id DESC
+    </select>
+
+    <select id="getFansNum" resultType="int">
+        SELECT COUNT(*) FROM relation_follow
+        WHERE followed_user_id = #{userId}
+          AND user_id NOT IN (SELECT ignored_user_id FROM relation_black WHERE user_id = #{userId});
+    </select>
+
+    <select id="getFollowNum" resultType="int">
+        SELECT COUNT(*) FROM relation_follow
+        WHERE user_id = #{userId}
+          AND followed_user_id NOT IN (SELECT ignored_user_id FROM relation_black WHERE user_id = #{userId});
+    </select>
+
+
+    <select id="getFollow" resultType="user">
+        SELECT *
+        FROM entity_user
+        WHERE id IN (SELECT followed_user_id FROM relation_follow WHERE user_id = #{userId})
+          AND id NOT IN (SELECT ignored_user_id FROM relation_black WHERE user_id = #{userId})
+        ORDER BY id DESC
+    </select>
+
+    <select id="getBlackPage" resultType="user">
+        select * from entity_user where id in (select ignored_user_id from relation_black where user_id = #{userId}) order by id desc
+    </select>
+
+    <select id="getBlackNum" parameterType="int" resultType="int">
+        select count(*) from relation_black where user_id = #{userId}
+    </select>
+
+    <insert id="addBlack">
+        insert into relation_black (user_id, ignored_user_id) values (#{userId}, #{ignoredUserId})
+    </insert>
+
+    <delete id="deleteBlack">
+        delete from relation_black where user_id = #{userId} and ignored_user_id = #{ignoredUserId}
+    </delete>
+
+    <select id="getBlackStatus" resultType="int">
+        select count(*) from relation_black where user_id = #{userId} and ignored_user_id = #{ignoredUserId}
+    </select>
+
+    <insert id="addLike" parameterType="int">
+        insert into relation_like (liked_id, user_id, like_type) values (#{likedId}, #{userId}, #{likeType})
+    </insert>
+
+    <delete id="delLike" parameterType="int">
+        delete from relation_like where liked_id = #{likedId} and user_id = #{userId} and like_type = #{likeType}
+    </delete>
+
+    <select id="getLikeStatus" parameterType="int" resultType="user">
+        select * from relation_like where liked_id = #{likedId} and user_id = #{userId} and like_type = #{likeType}
+    </select>
+
+    <select id="searchUser" resultType="user">
+        select * from entity_user where nick_name like CONCAT('%',#{text},'%') and id not in (select ignored_user_id from relation_black where user_id = #{userId}) order by id desc
+    </select>
+
+    <update id="banUser" parameterType="int">
+        update entity_user set ban_status = 1 where id = #{userId}
+    </update>
+
+    <update id="cancelBan" parameterType="int">
+        update entity_user set ban_status = 0 where id = #{userId}
+    </update>
+
+    <select id="getBanStatus" parameterType="int" resultType="int">
+        select ban_status from entity_user where id = #{userId}
+    </select>
+
+    <select id="getUserByType" parameterType="int" resultType="user">
+        select * from entity_user where ban_status = #{typeId} and id != 25
+    </select>
+
+    <select id="searchUserByAdmin" resultType="user">
+        select * from entity_user where user_name = #{userName} and id != 25
+    </select>
+
+</mapper>

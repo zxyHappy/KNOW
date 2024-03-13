@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluemsun.know.mapper.KeyMapper">
+    <insert id="addKey" parameterType="searchKey">
+        insert into tb_key (key_text,num) values (#{keyText},#{num})
+    </insert>
+
+    <select id="getKeys" resultType="searchKey">
+        select * from tb_key
+    </select>
+
+    <select id="getKeyByText" parameterType="string" resultType="searchKey">
+        select * from tb_key where key_text like CONCAT('%',#{keyText},'%')
+    </select>
+
+    <update id="updateKey" parameterType="int" >
+        update tb_key set num = num+1 where id = #{id}
+    </update>
+
+</mapper>

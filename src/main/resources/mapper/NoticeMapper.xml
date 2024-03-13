@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluemsun.know.mapper.NoticeMapper">
+
+    <insert id="addNotice" parameterType="notice" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO entity_notice (
+        <if test="relatedUserId != null and relatedUserId != -1">related_user_id,</if>
+        <if test="relatedPostId != null and relatedPostId != -1">related_post_id,</if>
+        <if test="title != null">title,</if>
+        notice_type, text, time
+        )
+        VALUES (
+        <if test="relatedUserId != null and relatedUserId != -1">
+            #{relatedUserId},
+        </if>
+        <if test="relatedPostId != null and relatedPostId != -1">
+            #{relatedPostId},
+        </if>
+        <if test="title != null">
+            #{title},
+        </if>
+        #{noticeType},
+        #{text},
+        NOW()
+        )
+    </insert>
+
+
+
+    <insert id="addRelation" parameterType="int">
+        insert into relation_notice_user (notice_id,user_id) values (#{noticeId}, #{userId})
+    </insert>
+
+    <update id="setRead" parameterType="int">
+        UPDATE relation_notice_user ru
+        SET ru.view_status = 1
+        WHERE ru.notice_id IN (
+            SELECT en.id
+            FROM entity_notice en
+            WHERE en.notice_type = #{noticeType}
+        )
+          AND ru.user_id = #{userId}
+    </update>
+
+
+
+    <delete id="delNotice" parameterType="int">
+        delete from relation_notice_user where notice_id = #{noticeId} and user_id = #{userId}
+    </delete>
+
+    <select id="getNoticeNoReadNum" parameterType="int" resultType="int">
+        SELECT COUNT(*)
+        FROM relation_notice_user, entity_notice
+        WHERE entity_notice.id = relation_notice_user.notice_id
+        AND relation_notice_user.user_id = #{userId}
+        AND relation_notice_user.view_status = 0
+        <choose>
+            <when test="noticeType != -1">
+                AND entity_notice.notice_type = #{noticeType}
+            </when>
+        </choose>
+    </select>
+
+
+    <select id="getNoticeByType" parameterType="int" resultType="notice">
+        SELECT entity_notice.*, relation_notice_user.view_status
+        FROM entity_notice, relation_notice_user
+        WHERE entity_notice.id = relation_notice_user.notice_id
+          AND relation_notice_user.user_id = #{userId}
+          AND entity_notice.notice_type = #{noticeType}
+        ORDER BY relation_notice_user.view_status ASC, entity_notice.id DESC
+    </select>
+
+
+
+</mapper>

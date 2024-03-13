@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bluemsun.know.mapper.PostMapper">
+    <insert id="insertPost" parameterType="post" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO entity_post (user_id, title, body, time, view_status, post_status
+        <if test="photo != null and photo != ''">, photo</if>)
+        VALUES (#{userId}, #{title}, #{body}, now(), #{viewStatus}, #{postStatus}
+        <if test="photo != null and photo != ''">, #{photo}</if>)
+    </insert>
+
+
+
+    <select id="getSelfPosts" parameterType="map" resultType="post">
+        select * from entity_post
+        <where>
+            <if test="userId != null and userId != -1">
+                and user_id = #{userId}
+            </if>
+            <if test="viewStatus != null and viewStatus != -1">
+                and view_status = #{viewStatus}
+            </if>
+            <if test="postStatus != null and postStatus != -1">
+                and post_status = #{postStatus}
+            </if>
+        </where>
+        order by id desc
+    </select>
+
+
+
+    <update id="updatePost" parameterType="post">
+        update entity_post
+        <set>
+            <if test="title != null and title != ''">
+                title = #{title},
+            </if>
+            <if test="body != null and body != ''">
+                body = #{body},
+            </if>
+            <if test="viewStatus != -1 and viewStatus != null">
+                view_status = #{viewStatus},
+            </if>
+            <if test="postStatus != -1 and postStatus != null">
+                post_status = #{postStatus},
+            </if>
+            <if test="photo != null and photo != ''">
+                photo = #{photo},
+            </if>
+            time = now()
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="getCollectPost" resultType="post">
+        select * from entity_post where id in (select post_id from relation_collect where user_id = #{userId}) order by id desc
+    </select>
+
+    <select id="getCollectPostNum" resultType="int">
+        select count(*) from relation_collect where user_id = #{userId}
+    </select>
+
+    <select id="getSelfPostNum" parameterType="map" resultType="int">
+        select count(*) from entity_post
+        <where>
+            <if test="userId != null and userId != -1">
+                and user_id = #{userId}
+            </if>
+            <if test="viewStatus != null and viewStatus != -1">
+                and view_status = #{viewStatus}
+            </if>
+            <if test="postStatus != null and viewStatus != -1">
+                and post_status = #{postStatus}
+            </if>
+        </where>
+    </select>
+
+    <select id="getBlockByPost" parameterType="int" resultType="String">
+        select block_name from entity_block where id in (select block_id from relation_post_belong where post_id = #{postId})
+    </select>
+
+    <select id="getBlockIdByPost" parameterType="int" resultType="int">
+        select block_id from relation_post_belong where post_id = #{postId}
+    </select>
+
+    <insert id="addBelong" parameterType="int">
+        insert into relation_post_belong (post_id, block_id) values (#{postId}, #{blockId})
+    </insert>
+
+    <delete id="delBelong" parameterType="int">
+        delete from relation_post_belong where post_id = #{postId} and block_id = #{blockId}
+    </delete>
+
+    <delete id="delAllBelongByPost" parameterType="int">
+        delete from relation_post_belong where post_id = #{postId}
+    </delete>
+
+    <select id="getPostById" parameterType="int" resultType="post">
+        select * from entity_post where id = #{id}
+    </select>
+
+    <update id="addScan" parameterType="int">
+        update entity_post set scan_number =  scan_number+1 where id = #{id}
+    </update>
+
+    <insert id="addCollect" parameterType="int">
+        insert into relation_collect (user_id,post_id) values (#{userId}, #{postId})
+    </insert>
+
+    <delete id="delCollect" parameterType="int">
+        delete from relation_collect where user_id = #{userId} and post_id = #{postId}
+    </delete>
+
+    <select id="getCollectStatus" parameterType="int" resultType="post">
+        select * from relation_collect where user_id = #{userId} and post_id = #{postId}
+    </select>
+
+    <update id="addLike" parameterType="int">
+        update entity_post set like_number = like_number+1 where id = #{postId}
+    </update>
+
+    <update id="delLike" parameterType="int">
+        update entity_post set like_number = like_number-1 where id = #{postId}
+    </update>
+
+    <select id="getCollectNumByPost" parameterType="int" resultType="int">
+        select count(*) from relation_collect where post_id = #{postId}
+    </select>
+
+    <select id="getPostByBlock" parameterType="int" resultType="post">
+        select * from entity_post where id in (select post_id from relation_post_belong where block_id = #{blockId}) and user_id not in (select ignored_user_id from relation_black where user_id = #{userId}) and view_status = 1 and post_status = 1
+    </select>
+
+    <delete id="delPostById" parameterType="int">
+        delete from entity_post where id = #{postId}
+    </delete>
+
+    <select id="getPostsByHot" resultType="post">
+        select * from entity_post where view_status = 1 and post_status = 1 order by scan_number desc , id desc LIMIT 100;
+    </select>
+
+    <select id="getPostsByBlockHot" parameterType="int" resultType="post">
+        SELECT e.*
+        FROM entity_post e
+                 JOIN relation_post_belong r ON e.id = r.post_id
+        WHERE r.block_id = #{blockId} and e.view_status = 1 and e.post_status = 1
+        ORDER BY e.scan_number DESC
+            LIMIT 100;
+    </select>
+
+    <select id="searchPostByHot" resultType="post">
+        select * from entity_post where (title like CONCAT('%',#{text},'%') or body like CONCAT('%',#{text},'%')) and user_id not in (select ignored_user_id from relation_black where user_id = #{userId}) and view_status = 1 and post_status = 1
+        order by like_number desc, id asc
+    </select>
+
+    <select id="searchPostByTime" resultType="post">
+        select * from entity_post where (title like CONCAT('%',#{text},'%') or body like CONCAT('%',#{text},'%')) and user_id not in (select ignored_user_id from relation_black where user_id = #{userId}) and view_status = 1 and post_status = 1
+        order by id desc
+    </select>
+
+    <select id="getReviewPosts" resultType="post">
+        select * from entity_post where post_status = 2 order by id desc
+    </select>
+
+    <update id="updatePostByAdmin" parameterType="post">
+        update entity_post
+        <set>
+            <if test="postStatus != -1 and postStatus != null">
+                post_status = #{postStatus},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="searchPostByAdmin" resultType="post">
+        SELECT * FROM entity_post
+        WHERE
+        <if test="text != null and text != ''">
+            (title LIKE CONCAT('%', #{text}, '%') OR body LIKE CONCAT('%', #{text}, '%'))
+        </if>
+        <if test="viewStatus != null and viewStatus != -1">
+            AND view_status = #{viewStatus}
+        </if>
+        <if test="postStatus != null and postStatus != -1">
+            AND post_status = #{postStatus}
+        </if>
+        ORDER BY id DESC
+    </select>
+
+    <update id="setReview" parameterType="int">
+        update entity_post set post_status = 3 where id = #{postId}
+    </update>
+
+</mapper>
